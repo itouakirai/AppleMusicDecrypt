@@ -35,5 +35,5 @@ jobs:
         if: github.event_name == 'release'
         with:
           allowUpdates: true
-          artifacts: AppleMusicDecrypt-Windows
+          artifacts: AppleMusicDecrypt-Windows.zip
           token: ${{ secrets.GITHUB_TOKEN }}
