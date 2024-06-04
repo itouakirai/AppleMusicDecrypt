@@ -24,16 +24,19 @@ jobs:
       - name: Rename
         run: |
           ren main.dist AppleMusicDecrypt
+      - name: tar
+        run: |
+          tar -czvf AppleMusicDecrypt-Windows.tar.gz ./AppleMusicDecrypt
       - name: Upload CLI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AppleMusicDecrypt-Windows
-          path: AppleMusicDecrypt
+          name: AppleMusicDecrypt-Windows.tar.gz
+          path: AppleMusicDecrypt-Windows.tar.gz
       # 发布release版本
       - name: Release version
         uses: ncipollo/release-action@v1
         if: github.event_name == 'release'
         with:
           allowUpdates: true
-          artifacts: AppleMusicDecrypt-Windows.zip
+          artifacts: AppleMusicDecrypt-Windows.tar.gz
           token: ${{ secrets.GITHUB_TOKEN }}
