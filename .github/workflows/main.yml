@@ -1,7 +1,6 @@
 on:
-  push:
-    tags:
-      - "v*"
+  release:
+    types: [prereleased]
 
 jobs:
   build_winodws:
@@ -30,22 +29,11 @@ jobs:
         with:
           name: AppleMusicDecrypt-Windows
           path: AppleMusicDecrypt
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # 发布release版本
+      - name: Release version
+        uses: ncipollo/release-action@v1
+        if: github.event_name == 'release'
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./AppleMusicDecrypt
-          asset_name: AppleMusicDecrypt-Windows.zip
-          asset_content_type: application/zip
+          allowUpdates: true
+          artifacts: AppleMusicDecrypt-Windows
+          token: ${{ secrets.GITHUB_TOKEN }}
