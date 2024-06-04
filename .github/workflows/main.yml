@@ -26,7 +26,7 @@ jobs:
           ren main.dist AppleMusicDecrypt
       - name: tar
         run: |
-          tar -czvf AppleMusicDecrypt-Windows.tar.gz ./AppleMusicDecrypt
+          tar -czvf AppleMusicDecrypt-Windows.tar.gz AppleMusicDecrypt
       - name: Upload CLI artifact
         uses: actions/upload-artifact@v4
         with:
