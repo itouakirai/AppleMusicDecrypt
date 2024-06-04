@@ -97,8 +97,7 @@ suMethod = "su 0"
 
 ### Use pre-built script (For Windows)
 
-Download latest build from [Actions](https://github.com/WorldObservationLog/AppleMusicDecrypt/actions) (need login your
-GitHub account). Unzip it, and run `main.exe`
+Download latest build from [Actions](https://github.com/WorldObservationLog/AppleMusicDecrypt/actions) . Unzip it, and run `main.exe`
 
 ### Manually Run
 
