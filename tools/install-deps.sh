@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-if ! grep -qi 'ID_LIKE=.*debian' /etc/os-release && ! grep -qi '^ID=debian' /etc/os-release; then
-  echo "installing AppleMusicDecrypt deps"
-else
+if ! command -v apt >/dev/null 2>&1
+then
   echo "install-deps.sh do not support Non-Debian distro"
   exit 1
 fi
