@@ -31,4 +31,21 @@ if ! command -v mp4box >/dev/null 2>&1; then
 
   MP4BOX_PATH=$(command -v MP4Box)
   if [ -n "$MP4BOX_PATH" ]; then
-    $PREFIX ln -sf "$MP4BOX_PATH"_
+    $PREFIX ln -sf "$MP4BOX_PATH" "$(dirname "$MP4BOX_PATH")/mp4box"
+  fi
+  rm -rf /tmp/gpac
+fi
+
+if ! command -v mp4edit >/dev/null 2>&1; then
+  echo "Installing Bento4 toolkits..."
+  cd /tmp/ || exit 1
+  git clone --depth=1 https://github.com/axiomatic-systems/Bento4.git
+  mkdir -p Bento4/cmakebuild
+  cd Bento4/cmakebuild || exit 1
+  cmake -DCMAKE_BUILD_TYPE=Release ..
+  make
+  $PREFIX make install
+  rm -rf /tmp/Bento4
+fi
+
+echo "Done."
