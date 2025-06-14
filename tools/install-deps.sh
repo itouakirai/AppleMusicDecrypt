@@ -1,35 +1,34 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-if ! command -v apt >/dev/null 2>&1
-then
-  echo "install-deps.sh do not support Non-Debian distro"
+PREFIX=""
+if [ "$EUID" -ne 0 ]; then
+  PREFIX="sudo "
+fi
+
+if ! command -v apt >/dev/null 2>&1; then
+  echo "install-deps.sh does not support Non-Debian distros"
   exit 1
 fi
-echo "installing build deps"
-sudo apt-get update && sudo apt-get install -y build-essential pkg-config git zlib1g-dev
-if ! command -v ffmpeg >/dev/null 2>&1
-then
-  echo "installing ffmpeg"
-  sudo apt-get install -y ffmpeg
+
+echo "Installing build dependencies..."
+$PREFIX apt-get update
+$PREFIX apt-get install -y build-essential pkg-config git zlib1g-dev
+
+if ! command -v ffmpeg >/dev/null 2>&1; then
+  echo "Installing ffmpeg..."
+  $PREFIX apt-get install -y ffmpeg
 fi
 
-if ! command -v mp4box >/dev/null 2>&1
-then
-  echo "installing gpac and mp4box"
+if ! command -v mp4box >/dev/null 2>&1; then
+  echo "Installing gpac and MP4Box..."
   cd /tmp/ || exit 1
   git clone --depth=1 https://github.com/gpac/gpac.git
-  cd /tmp/gpac || exit 1 && ./configure --static-bin && make && sudo make install
-  sudo ln -s "$(whereis -b MP4Box | sed -e 's/^MP4Box: //')" "$(whereis -b MP4Box | sed -e 's/^MP4Box: //' -e 's/\bMP4Box\b/mp4box/g')"
-  rm -rf /tmp/gpac
-fi
+  cd gpac || exit 1
+  ./configure --static-bin
+  make
+  $PREFIX make install
 
-if ! command -v mp4edit >/dev/null 2>&1
-then
-  echo "installing Bento4 toolkits"
-  cd /tmp/ || exit 1
-  git clone --depth=1 https://github.com/axiomatic-systems/Bento4.git
-  mkdir /tmp/Bento4/cmakebuild && cd /tmp/Bento4/cmakebuild || exit 1 && cmake -DCMAKE_BUILD_TYPE=Release .. && make && sudo make install
-  rm -rf /tmp/Bento4
-fi
-
-echo "done"
+  MP4BOX_PATH=$(command -v MP4Box)
+  if [ -n "$MP4BOX_PATH" ]; then
+    $PREFIX ln -sf "$MP4BOX_PATH"_
