@@ -24,7 +24,7 @@ async def on_2fa(username: str, password: str):
 
 
 async def main():
-    await it(WrapperManager).init(it(Config).instance)
+    await it(WrapperManager).init(it(Config).instance.url, it(Config).instance.secure)
     username = input("Username: ")
     password = input("Password: ")
     try:
