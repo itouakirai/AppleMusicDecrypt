@@ -13,7 +13,7 @@ fi
 
 echo "Installing build dependencies..."
 $PREFIX apt-get update
-$PREFIX apt-get install -y build-essential pkg-config git zlib1g-dev
+$PREFIX apt-get install -y build-essential pkg-config git zlib1g-dev cmake
 
 if ! command -v ffmpeg >/dev/null 2>&1; then
   echo "Installing ffmpeg..."
