@@ -20,7 +20,7 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
   $PREFIX apt-get install -y ffmpeg
 fi
 
-if ! command -v mp4box >/dev/null 2>&1; then
+if ! command -v MP4Box >/dev/null 2>&1; then
   echo "Installing gpac and MP4Box..."
   cd /tmp/ || exit 1
   git clone --depth=1 https://github.com/gpac/gpac.git
