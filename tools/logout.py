@@ -18,21 +18,15 @@ from src.grpc.manager import WMCreator, WrapperManager, WrapperManagerException
 add_creator(WMCreator)
 
 
-async def on_2fa(username: str, password: str):
-    two_step_code = input("2FA code: ")
-    return two_step_code
-
-
 async def main():
     await it(WrapperManager).init(it(Config).instance.url, it(Config).instance.secure)
     username = input("Username: ")
-    password = input("Password: ")
     try:
-        await it(WrapperManager).login(username, password, on_2fa)
+        await it(WrapperManager).logout(username)
     except WrapperManagerException as e:
-        it(GlobalLogger).logger.error("Login Failed!")
+        it(GlobalLogger).logger.error("Logout Failed!")
         return
-    it(GlobalLogger).logger.info("Login Success!")
+    it(GlobalLogger).logger.info("Logout Success!")
 
 if __name__ == '__main__':
     loop.run_until_complete(main())
