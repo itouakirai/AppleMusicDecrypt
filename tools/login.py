@@ -20,7 +20,7 @@ add_creator(WMCreator)
 
 async def on_2fa(username: str, password: str):
     two_step_code = input("2FA code: ")
-    return int(two_step_code)
+    return two_step_code
 
 
 async def main():
