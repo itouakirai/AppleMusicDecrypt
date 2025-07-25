@@ -26,7 +26,7 @@ if ! command -v MP4Box >/dev/null 2>&1; then
   git clone --depth=1 https://github.com/gpac/gpac.git
   cd gpac || exit 1
   ./configure --static-bin
-  make
+  make -j$(nproc)
   $PREFIX make install
 
   MP4BOX_PATH=$(command -v MP4Box)
@@ -43,7 +43,7 @@ if ! command -v mp4edit >/dev/null 2>&1; then
   mkdir -p Bento4/cmakebuild
   cd Bento4/cmakebuild || exit 1
   cmake -DCMAKE_BUILD_TYPE=Release ..
-  make
+  make -j$(nproc)
   $PREFIX make install
   rm -rf /tmp/Bento4
 fi
