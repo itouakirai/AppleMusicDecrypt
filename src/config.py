@@ -19,8 +19,8 @@ class Region(BaseModel):
 
 class Download(BaseModel):
     proxy: str = ""
-    parallelNum: int = 1
-    maxRunningTasks: int = 128
+    parallelNum: int = 4
+    maxRunningTasks: int = 8
     appleCDNIP: str = ""
     codecAlternative: bool = True
     codecPriority: list[str] = ["alac", "ec3", "ac3", "aac"]

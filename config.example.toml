@@ -17,9 +17,9 @@ languageNotExistWarning = true
 # Send request to Apple Music through proxy. Only support http and https protocol
 proxy = ""
 # Number of concurrent song downloads
-parallelNum = 1
+parallelNum = 4
 # Number of max running tasks
-maxRunningTasks = 128
+maxRunningTasks = 8
 # Specify the IP address to use when downloading to speed up downloading
 # Taiwan: 17.253.117.201-17.253.117.203
 # Hongkong: 17.253.85.201-17.253.85.206, 17.253.87.195, 17.253.87.196, 17.253.87.201, 17.253.87.203
