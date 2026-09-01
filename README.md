@@ -82,15 +82,14 @@ See the [wrapper-lite documentation](https://github.com/WorldObservationLog/wrap
 
 For Android users: [android-deploy.md](/android-deploy.md)
 
-For Windows users: use [the pre-configured version](https://nightly.link/WorldObservationLog/AppleMusicDecrypt/workflows/win-build/v2/AppleMusicDecrypt-Windows.zip) that works out of the box
-
 ```shell
 git clone https://github.com/WorldObservationLog/AppleMusicDecrypt.git
 cd AppleMusicDecrypt
 bash ./tools/install-deps.sh
-poetry install
+python -m pip install uv
+uv sync
 cp config.example.toml config.toml
-poetry run python main.py
+uv run python main.py
 ```
 
 ## FAQ

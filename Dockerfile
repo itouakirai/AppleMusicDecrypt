@@ -4,13 +4,7 @@ WORKDIR /app
 
 COPY . /app
 
-# Install Poetry
-RUN set -eux; \
-    apk add --no-cache curl; \
-    \
-    curl -sSL https://install.python-poetry.org | python3 -
-
-ENV PATH="/root/.local/bin:$PATH"
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
 # Build GPAC and Bento4
 RUN set -eux; \
@@ -47,6 +41,6 @@ RUN set -eux; \
     apk add --no-cache ffmpeg; \
     \
     export PATH="/root/.local/bin:$PATH"; \
-    poetry install;
+    uv sync --frozen --no-dev;
 
-CMD ["poetry", "run", "python", "main.py"]
+CMD ["uv", "run", "--no-sync", "python", "main.py"]

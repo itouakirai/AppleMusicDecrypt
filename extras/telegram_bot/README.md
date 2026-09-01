@@ -35,9 +35,9 @@ Edit `extras/telegram_bot/config.toml` to configure:
 
 ### 3. Running the Bot
 
-Run the bot module from the root directory using Poetry:
+Run the bot module from the root directory:
 ```shell
-poetry run python extras/telegram_bot/main.py
+uv run python extras/telegram_bot/main.py
 ```
 
 ## Commands

@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-# Add project root to sys.path to allow execution via `poetry run python extras/telegram_bot/main.py`
+# Add project root to sys.path to allow execution via `uv run python extras/telegram_bot/main.py`
 project_root = Path(__file__).resolve().parent.parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))

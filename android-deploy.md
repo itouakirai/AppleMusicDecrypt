@@ -11,11 +11,11 @@ pd i debian
 ## Step 2: Deploy AppleMusicDecrypt
 Enter the Debian environment(`pd login debian`)
 ```shell
-apt update && apt install pipx git -y && pipx install poetry && pipx ensurepath && source ~/.bashrc
+apt update && apt install pipx git -y && pipx install uv && pipx ensurepath && source ~/.bashrc
 git clone https://github.com/WorldObservationLog/AppleMusicDecrypt
 cd AppleMusicDecrypt
 bash ./tools/install-deps.sh
-poetry env use /usr/bin/python3 && poetry install
+uv sync --python /usr/bin/python3
 cp config.example.toml config.toml
 nano config.toml
 ```
@@ -23,8 +23,7 @@ nano config.toml
 For Android users, some configurations need to be modified.
 ```toml
 [instance]
-url = "wm.wol.moe" # Or use another wrapper-manager instance
-secure = true
+url = "https://wm.wol.moe" # Or use another wrapper-manager instance
 
 [download]
 parallelNum = 2 # The recommended value is half of maxRunningTasks
@@ -33,13 +32,13 @@ dirPathFormat = "/sdcard/Music/{album_artist}/{album}"
 playlistDirPathFormat = "/sdcard/Music/playlists/{playlistName}"
 ```
 ## Step 4: Run AppleMusicDecrypt
-`poetry run python main.py`
+`uv run python main.py`
 ## Update AppleMusicDecrypt
 ```shell
 pd login debian
 cd AppleMusicDecrypt
 git checkout -f && git pull
-poetry update
+uv sync
 cp config.example.toml config.toml
 nano config.toml
 ```
