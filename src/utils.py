@@ -6,7 +6,6 @@ import time
 from asyncio import AbstractEventLoop
 from copy import deepcopy
 from datetime import datetime, timedelta
-from distutils.version import LooseVersion
 from itertools import islice
 from pathlib import Path
 
@@ -242,8 +241,6 @@ def convent_mac_timestamp_to_datetime(timestamp: int):
 
 def check_dep():
     deps = ["ffmpeg", "gpac", "MP4Box", "mp4edit", "mp4extract", "mp4decrypt"]
-    if it(Config).localInstance.enable:
-        deps.append("qemu-system-x86_64")
     for dep in deps:
         try:
             subprocess.run(dep, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -253,7 +250,7 @@ def check_dep():
 
 
 async def check_song_existence(adam_id: str, region: str):
-    from src.grpc.manager import WrapperManager
+    from src.wrapper import WrapperManager
     from src.api import WebAPI
     check = False
     for m_region in (await it(WrapperManager).status()).regions:
@@ -267,7 +264,7 @@ async def check_song_existence(adam_id: str, region: str):
 
 
 async def check_album_existence(album_id: str, region: str):
-    from src.grpc.manager import WrapperManager
+    from src.wrapper import WrapperManager
     from src.api import WebAPI
     check = False
     for m_region in (await it(WrapperManager).status()).regions:
@@ -327,4 +324,7 @@ def language_exist(region: str, language: str):
 
 
 def config_outdated():
-    return LooseVersion(it(Config).version) < LooseVersion(CONFIG_VERSION)
+    def version_tuple(version: str):
+        return tuple(int(part) for part in version.split(".") if part.isdigit())
+
+    return version_tuple(it(Config).version) < version_tuple(CONFIG_VERSION)

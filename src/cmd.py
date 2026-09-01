@@ -4,7 +4,7 @@ import copy
 import os
 import sys
 
-import grpc.aio
+import httpx
 from creart import it
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import NestedCompleter
@@ -13,10 +13,9 @@ from prompt_toolkit.patch_stdout import patch_stdout
 from src.api import WebAPI
 from src.config import Config
 from src.flags import Flags
-from src.grpc.manager import WrapperManager, WrapperManagerException
+from src.wrapper import WrapperManager, WrapperManagerException
 from src.logger import GlobalLogger
 from src.measurer import Measurer
-from src.qemu import QemuInstance
 from src.quality import print_song_quality, print_album_quality, print_playlist_quality, key_to_Headers
 from src.rip import Ripper
 from src.url import AppleMusicURL, URLType
@@ -27,7 +26,6 @@ class InteractiveShell:
     loop: asyncio.AbstractEventLoop
     parser: argparse.ArgumentParser
     parser: argparse.ArgumentParser
-    localInstance: QemuInstance = QemuInstance()
     ripper: Ripper
 
     def __init__(self, loop: asyncio.AbstractEventLoop):
@@ -40,24 +38,11 @@ class InteractiveShell:
 
         self.loop = loop
         loop.run_until_complete(run_sync(it(WebAPI).init))
-        if it(Config).localInstance.enable:
-            loop.run_until_complete(self.localInstance.launch_instance(loop))
-            it(Config).instance.url = "127.0.0.1:32767"
-            it(Config).instance.secure = False
-            loop.run_until_complete(it(WrapperManager).init(it(Config).instance.url, it(Config).instance.secure))
-            while True:
-                it(WrapperManager).status.cache_invalidate()
-                if loop.run_until_complete(it(WrapperManager).status()).ready:
-                    break
-                loop.run_until_complete(asyncio.sleep(3))
-        else:
-            loop.run_until_complete(it(WrapperManager).init(it(Config).instance.url, it(Config).instance.secure))
-        safely_create_task(it(WrapperManager).decrypt_init(on_success=self.ripper.on_decrypt_success,
-                                                           on_failure=self.ripper.on_decrypt_failed))
+        loop.run_until_complete(it(WrapperManager).init(it(Config).instance.url))
         try:
             loop.run_until_complete(self.show_status())
-        except grpc.aio._call.AioRpcError:
-            it(GlobalLogger).logger.error("Unable to connect to the wrapper-manager")
+        except (httpx.HTTPError, WrapperManagerException):
+            it(GlobalLogger).logger.error("Unable to connect to the wrapper-lite instance")
             sys.exit()
 
         if config_outdated():
@@ -89,8 +74,6 @@ class InteractiveShell:
         quality_parser.add_argument("-b", "--batch", default=False, action="store_true")
 
         subparser.add_parser("status")
-        subparser.add_parser("login")
-        subparser.add_parser("logout")
         subparser.add_parser("exit")
 
         self.batch_mode = False
@@ -100,8 +83,8 @@ class InteractiveShell:
         st_resp = await it(WrapperManager).status()
         if not st_resp.regions:
             it(GlobalLogger).logger.error(
-                "The currently used wrapper-manager instance has no available account. Please execute login command to log in.")
-        it(GlobalLogger).logger.info(f"Regions available on wrapper-manager instance: {', '.join(st_resp.regions)}")
+                "The currently used wrapper-lite instance has no available account.")
+        it(GlobalLogger).logger.info(f"Regions available on wrapper-lite instance: {', '.join(st_resp.regions)}")
 
     async def handle_batch_mode(self, args, cmds):
         try:
@@ -244,8 +227,6 @@ class InteractiveShell:
                 "--batch": None
             },
             "status": None,
-            "login": None,
-            "logout": None,
             "exit": None
         }
         return NestedCompleter.from_nested_dict(mycompleter)
@@ -268,51 +249,13 @@ class InteractiveShell:
         while True:
             try:
                 command = await session.prompt_async()
-                if command.lower() == 'login':
-                    await self.login_flow()
-                if command.lower() == 'logout':
-                    await self.logout_flow()
-                elif command.strip() == '':
+                if command.strip() == '':
                     continue
                 else:
                     await self.command_parser(command)
             except (EOFError, KeyboardInterrupt):
                 self.handle_exit()
 
-    async def on_2fa(self, username: str, password: str):
-        session = PromptSession()
-        two_step_code = await session.prompt_async("2FA code: ")
-        return two_step_code
-
-    async def login_flow(self):
-        await it(WrapperManager).init(it(Config).instance.url, it(Config).instance.secure)
-        session = PromptSession()
-        username = await session.prompt_async("Username: ")
-        password = await session.prompt_async("Password: ", is_password=True)
-        try:
-            await it(WrapperManager).login(username, password, self.on_2fa)
-        except WrapperManagerException as e:
-            it(GlobalLogger).logger.error("Login Failed!")
-            return
-        it(GlobalLogger).logger.info("Login Success!")
-        it(WrapperManager).status.cache_invalidate()
-
-    async def logout_flow(self):
-        await it(WrapperManager).init(it(Config).instance.url, it(Config).instance.secure)
-        session = PromptSession()
-        username = await session.prompt_async("Username: ")
-        try:
-            await it(WrapperManager).logout(username)
-        except WrapperManagerException as e:
-            it(GlobalLogger).logger.error("Logout Failed!")
-            return
-        it(GlobalLogger).logger.info("Logout Success!")
-        it(WrapperManager).status.cache_invalidate()
-
     async def start(self):
         with patch_stdout():
-            try:
-                await self.handle_command()
-            finally:
-                if it(Config).localInstance.enable:
-                    self.localInstance.terminate()
+            await self.handle_command()

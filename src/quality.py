@@ -11,7 +11,7 @@ from src.config import Config
 from src.metadata import SongMetadata
 from src.utils import get_codec_from_codec_id, safely_create_task, playlist_write_song_index
 from src.url import Song, Album, URLType, Playlist
-from src.grpc.manager import WrapperManager
+from src.wrapper import WrapperManager
 
 Headers = [
     "Codec ID",

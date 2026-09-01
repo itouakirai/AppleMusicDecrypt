@@ -3,13 +3,12 @@ import subprocess
 from typing import Dict, Optional
 
 from creart import it
-from tenacity import retry, stop_after_attempt, wait_fixed
 
 from src.api import WebAPI
 from src.config import Config
 from src.exceptions import CodecNotFoundException, SongNotPassIntegrityCheckException
 from src.flags import Flags
-from src.grpc.manager import WrapperManager
+from src.wrapper import WrapperManager
 from src.legacy.decrypt import WidevineDecrypt
 from src.legacy.mp4 import decrypt as legacy_decrypt
 from src.legacy.mp4 import extract_media as legacy_extract_media
@@ -155,30 +154,8 @@ class Ripper:
                     task.update_status(Status.DECRYPTING)
         
                     task.info = await run_sync(extract_song, raw_song, get_codec_from_codec_id(task.m3u8Info.codec_id))
-                    # Initialize futures for each sample
-                    for i in range(len(task.info.samples)):
-                        task.decrypted_samples_futures[i] = asyncio.get_running_loop().create_future()
-        
-                    # Launch decryption for all samples with tenacity
-                    decryption_tasks = []
-                    for sampleIndex, sample in enumerate(task.info.samples):
-                        decryption_tasks.append(
-                            self.decrypt_sample_with_retry(task.adamId, task.m3u8Info.keys[sample.descIndex], sample.data,
-                                                           sampleIndex)
-                        )
-                        if sampleIndex % 100 == 0:
-                            await asyncio.sleep(0)
-        
-                    # Wait for all decryption tasks to complete.
-                    # If any decrypt_sample_with_retry fails (raises exception after retries), we catch it.
-                    await asyncio.gather(*decryption_tasks)
-        
-                    # Encapsulate and Save
-                    # Collect results from futures in order
-                    decrypted_samples = []
-                    for i in range(len(task.info.samples)):
-                        # At this point all futures should have result because gather completed successfully
-                        decrypted_samples.append(task.decrypted_samples_futures[i].result())
+                    # Decrypt all samples locally with Temari using keys from wrapper-lite /key
+                    decrypted_samples = await self._decrypt_with_temari(task.adamId, task.m3u8Info, task.info.samples)
         
                     local_codec = get_codec_from_codec_id(task.m3u8Info.codec_id)
         
@@ -357,35 +334,29 @@ class Ripper:
             song = Song(id=track.id, storefront=url.storefront, url="", type=URLType.Song)
             safely_create_task(self.rip_song(song, codec, flags, done_handler, playlist=playlist_info))
 
-    @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
-    async def decrypt_sample_with_retry(self, adam_id: str, key: str, sample: bytes, sample_index: int):
-        task = self.download_manager.get_task(adam_id)
-        if not task:
-            raise Exception("Task cancelled or not found")
+    async def _decrypt_with_temari(self, adam_id: str, m3u8_info, samples) -> list[bytes]:
+        """Decrypt samples with Temari, fetching key templates from wrapper-lite /key."""
+        import json
+        from collections import defaultdict
 
-        # Reset future if it is already done (e.g. from previous failed attempt)
-        if task.decrypted_samples_futures[sample_index].done():
-            task.decrypted_samples_futures[sample_index] = asyncio.get_running_loop().create_future()
+        from temari import Temari
 
-        future = task.decrypted_samples_futures[sample_index]
+        groups: dict[str, list[tuple[int, bytes]]] = defaultdict(list)
+        for i, sample in enumerate(samples):
+            groups[m3u8_info.keys[sample.descIndex]].append((i, sample.data))
 
-        # We need to send the command to wrapper manager
-        await it(WrapperManager).decrypt(adam_id, key, sample, sample_index)
+        result: list[bytes] = [b""] * len(samples)
+        for key_uri, group in groups.items():
+            key_data = await it(WrapperManager).key(adam_id, key_uri)
+            template_json = json.dumps(key_data)
+            plains = await run_sync(self._temari_decrypt, template_json, [data for _, data in group])
+            for (i, _), plain in zip(group, plains):
+                result[i] = plain
+                it(Measurer).record_decrypt(len(plain))
+        return result
 
-        # Wait for the future to be resolved by the callback
-        return await future
-
-    async def on_decrypt_success(self, adam_id: str, key: str, sample: bytes, sample_index: int):
-        it(Measurer).record_decrypt(len(sample))
-        task = self.download_manager.get_task(adam_id)
-        if task and sample_index in task.decrypted_samples_futures:
-            if not task.decrypted_samples_futures[sample_index].done():
-                task.decrypted_samples_futures[sample_index].set_result(sample)
-
-    async def on_decrypt_failed(self, adam_id: str, key: str, sample: bytes, sample_index: int):
-        task = self.download_manager.get_task(adam_id)
-        if task and sample_index in task.decrypted_samples_futures:
-            if not task.decrypted_samples_futures[sample_index].done():
-                task.decrypted_samples_futures[sample_index].set_exception(Exception("Decryption failed callback"))
-
-    # Removed recv_decrypted_sample and on_decrypt_done as they are replaced by linear flow in rip_song
+    @staticmethod
+    def _temari_decrypt(template_json: str, samples: list[bytes]) -> list[bytes]:
+        from temari import Temari
+        with Temari.from_json(template_json) as t:
+            return t.decrypt_par(samples)

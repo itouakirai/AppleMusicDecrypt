@@ -16,7 +16,7 @@ from extras.telegram_bot.src.upload import UploadTask, check_disk_space
 from src.api import WebAPI
 from src.config import Config
 from src.flags import Flags
-from src.grpc.manager import WrapperManager
+from src.wrapper import WrapperManager
 from src.metadata import SongMetadata
 from src.task import Status
 from src.types import ParentDoneHandler, Codec

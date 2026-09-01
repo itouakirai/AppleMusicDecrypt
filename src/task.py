@@ -1,6 +1,6 @@
 import asyncio
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Optional
 
@@ -28,7 +28,6 @@ class Task:
     m3u8Info: Optional[M3U8Info] = None
     metadata: Optional[SongMetadata] = None
     logger: Optional[RipLogger] = None
-    decrypted_samples_futures: dict[int, asyncio.Future] = field(default_factory=dict)
     error: Optional[Exception] = None
 
     def update_status(self, status: Status):

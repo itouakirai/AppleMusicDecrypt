@@ -2,23 +2,8 @@
 version = "0.0.10"
 
 [instance]
-url = "127.0.0.1:8080"
-secure = false
-
-[localInstance]
-# Use qemu to launch wrapper-manager
-# This setting will overwrite instance setting
-enable = false
-# Use WHPX on Windows and KVM on Linux
-# For Windows users, run `Get-WindowsOptionalFeature -Online -FeatureName HypervisorPlatform` to check if WHPX enabled
-# For Linux users, run `sudo kvm-ok` to check if KVM supported
-enableHardwareAcceleration = false
-# For Windows WHPX, you may have to set hardwareAccelerator to `whpx,kernel-irqchip=off` and cpuModel to `qemu64-v1`
-hardwareAccelerator = ""
-memorySize = "512M"
-cpuModel = "Cascadelake-Server-v5"
-showWindow = false
-startArgs = "-host 0.0.0.0 -port 32767 -debug"
+# wrapper-lite HTTP API address. Use http:// or https:// to select the scheme.
+url = "http://127.0.0.1:8080"
 
 [region]
 # The language of song metadata. Influence song title, author and other information.

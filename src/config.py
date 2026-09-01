@@ -9,18 +9,7 @@ CONFIG_VERSION = "0.0.10"
 
 
 class Instance(BaseModel):
-    url: str = "127.0.0.1:8080"
-    secure: bool = False
-
-
-class LocalInstance(BaseModel):
-    enable: bool = False
-    enableHardwareAcceleration: bool = False
-    hardwareAccelerator: str = ""
-    memorySize: str = "512M"
-    cpuModel: str = "Cascadelake-Server-v5"
-    showWindow: bool = False
-    startArgs: str = "-host 0.0.0.0 -port 32767 -debug"
+    url: str = "http://127.0.0.1:8080"
 
 
 class Region(BaseModel):
@@ -65,7 +54,6 @@ class Config(BaseModel):
     version: str = "0.0.0"
     region: Region
     instance: Instance
-    localInstance: LocalInstance
     download: Download
     metadata: Metadata
 

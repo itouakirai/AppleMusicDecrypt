@@ -58,27 +58,32 @@ qa --invert --codec-id https://music.apple.com/jp/playlist/bocchi-the-rock/pl.u-
 - Apple Music Playlist Link (https://music.apple.com/jp/playlist/bocchi-the-rock/pl.u-Ympg5s39LRqp)
 
 # About V2
-AppleMusicDecrypt v2 provides support for remote fast decryption through [WorldObservationLog/wrapper](https://github.com/WorldObservationLog/wrapper) and [WorldObservationLog/wrapper-manager](https://github.com/WorldObservationLog/wrapper-manager)
+AppleMusicDecrypt v2 provides support for remote fast decryption through [WorldObservationLog/wrapper](https://github.com/WorldObservationLog/wrapper) (the `lite` branch)
 
-By connecting to a public wrapper-manager instance on the Internet, ripping can be completed without an Apple account or an active Apple Music subscription.
+By connecting to a public wrapper-lite instance on the Internet, ripping can be completed without an Apple account or an active Apple Music subscription.
 
-For faster decryption, wrapper-manager can also be deployed locally. The decryption speed of a single wrapper instance can reach up to 40MB/s
+Sample decryption is performed locally in Python with [WorldObservationLog/Temari](https://github.com/WorldObservationLog/Temari): the wrapper-lite `/key` endpoint returns the decryption template, and Temari decrypts the SAMPLE-AES samples in-process.
 
-A wrapper-manager instance for testing: 
+Example wrapper-lite configuration: 
 ```toml
-[instance] # Mantainced by @WorldObservationLog
-url = "wm.wol.moe"
-secure = true
-# or
-[instance] # Mantainced by @itouakira
-url = "wm1.wol.moe"
-secure = true
+[instance]
+url = "http://127.0.0.1:8080"
 ```
 
-## Run
+Run wrapper-lite locally before starting the downloader:
+
+```shell
+# Login once to cache tokens, then start the HTTP API service
+./wrapper-lite-rootless --login user:pass --code-from-file --base-dir /data
+./wrapper-lite-rootless --base-dir /data --host 127.0.0.1 --port 8080
+```
+
+See the [wrapper-lite documentation](https://github.com/WorldObservationLog/wrapper/tree/lite) for native, QEMU, and Docker deployment options.
+
 For Android users: [android-deploy.md](/android-deploy.md)
 
 For Windows users: use [the pre-configured version](https://nightly.link/WorldObservationLog/AppleMusicDecrypt/workflows/win-build/v2/AppleMusicDecrypt-Windows.zip) that works out of the box
+
 ```shell
 git clone https://github.com/WorldObservationLog/AppleMusicDecrypt.git
 cd AppleMusicDecrypt
@@ -91,7 +96,7 @@ poetry run python main.py
 ## FAQ
 ### Song did not pass the integrity check
 There are two possible causes for this problem:
-1. Potential wrapper decryption error. This problem usually disappears after a few days. You can try restarting the wrapper-manager, changing the wrapper-manager instance, or waiting for a few days.
+1. Potential wrapper decryption error. This problem usually disappears after a few days. You can try restarting wrapper-lite, changing the wrapper-lite instance, or waiting for a few days.
 2. The audio source file provided by Apple Music is damaged. See more: https://t.me/abcthoughts/6294
 
 ### The bit depth of the ripped audio file does not match the selected codec

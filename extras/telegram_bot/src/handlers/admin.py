@@ -5,25 +5,9 @@ from extras.telegram_bot.src.auth import require_admin
 from extras.telegram_bot.src.config import bot_config
 from extras.telegram_bot.src.db import user_db
 from src.config import Config
-from src.grpc.manager import WrapperManager
+from src.wrapper import WrapperManager
 from src.task import Status
 from creart import it
-
-
-@require_admin
-async def logout_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("Usage: /logout <username>\nPlease provide the Apple ID to logout.")
-        return
-
-    username = context.args[0]
-    await it(WrapperManager).init(it(Config).instance.url, it(Config).instance.secure)
-    try:
-        await it(WrapperManager).logout(username)
-        await update.message.reply_text(f"Logout Success for {username}!")
-        it(WrapperManager).status.cache_invalidate()
-    except Exception as e:
-        await update.message.reply_text(f"Logout Failed: {e}")
 
 
 @require_admin
